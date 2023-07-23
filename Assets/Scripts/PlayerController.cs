@@ -5,7 +5,9 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private CharacterController characterController;
-    public float speed = 15f;
+    private float speed = 15f;
+    private float smoothTime = 1f;
+    float turnSmoothVelocity;
     // Start is called before the first frame update
     void Start()
     {
@@ -15,7 +17,17 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        characterController.Move(move * Time.deltaTime * speed);
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float vecticalInput = Input.GetAxis("Vertical");
+        Vector3 direction = new Vector3(horizontalInput, 0, vecticalInput);
+
+
+        float targetAngle = Mathf.Atan2(direction.x , direction.y) * Mathf.Rad2Deg;
+        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, smoothTime);
+        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        
+
+
+        characterController.Move(direction * speed  * Time.deltaTime);
     }
 }
