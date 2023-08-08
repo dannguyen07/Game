@@ -1,33 +1,111 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    private CharacterController characterController;
-    private float speed = 15f;
-    private float smoothTime = 1f;
-    float turnSmoothVelocity;
-    // Start is called before the first frame update
-    void Start()
+    CharacterController characterController;
+    Animator animator;
+    PlayerInput playerInput;
+
+    Vector2 currentMovementInput;
+    Vector3 currentMovement;
+    Vector3 currentRunMovemnt;
+    float rotationFactorPerFrame = 2.0f;
+    float speed = 5.0f;
+    float speedRun = 2.0f;
+    bool isMovementPressed;
+    bool isRunPressed;
+
+    void Awake()
     {
+        playerInput = new PlayerInput();
         characterController = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
+
+
+        playerInput.CharacterControls.Move.started += onMovementInput;
+        playerInput.CharacterControls.Move.canceled += onMovementInput;
+        playerInput.CharacterControls.Move.performed += onMovementInput;
+
+        playerInput.CharacterControls.Run.started += onRun;
+        playerInput.CharacterControls.Run.canceled += onRun;
+
+    }
+    void onMovementInput(InputAction.CallbackContext context)
+    {
+        currentMovementInput = context.ReadValue<Vector2>();
+        currentMovement.x = currentMovementInput.x;
+        currentMovement.z = currentMovementInput.y;
+
+        currentRunMovemnt.x = currentMovementInput.x * speedRun;
+        currentRunMovemnt.z = currentMovementInput.y * speedRun;
+        isMovementPressed = currentMovementInput.x != 0 || currentMovementInput.y != 0;
+    }
+    void onRun(InputAction.CallbackContext context)
+    {
+        isRunPressed = context.ReadValueAsButton();
+
+    }
+    void handleRotation()
+    {
+        Vector3 positionToLookAt;
+        positionToLookAt.x = currentMovement.x;
+        positionToLookAt.y = 0f;
+        positionToLookAt.z = currentMovement.z;
+
+        Quaternion currentRotation = transform.rotation;
+        if (isMovementPressed)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(positionToLookAt);
+            transform.rotation = Quaternion.Slerp(currentRotation, targetRotation, rotationFactorPerFrame * Time.deltaTime);
+        }
+    }
+    void handleAnimation()
+    {
+        bool isWalking = animator.GetBool("IsWalking");
+        bool isRunning = animator.GetBool("IsRunning");
+        if(isMovementPressed && !isWalking)
+        {
+            animator.SetBool("IsWalking", true);
+        }
+        else if(!isMovementPressed && isWalking)
+        {
+            animator.SetBool("IsWalking", false);
+        }
+
+        if(isRunPressed && !isRunning)
+        {
+            animator.SetBool("IsRunning", true);
+        }
+        else if(!isRunPressed && isRunning)
+        {
+            animator.SetBool("IsRunning", false);
+        }
     }
 
-    // Update is called once per frame
+
     void Update()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float vecticalInput = Input.GetAxis("Vertical");
-        Vector3 direction = new Vector3(horizontalInput, 0, vecticalInput);
-
-
-        float targetAngle = Mathf.Atan2(direction.x , direction.y) * Mathf.Rad2Deg;
-        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, smoothTime);
-        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        handleRotation();
+        handleAnimation();
+        if (isRunPressed)
+        {
+            characterController.Move(currentRunMovemnt * Time.deltaTime * speed);
+        }
+        characterController.Move(currentMovement * Time.deltaTime * speed);
         
+    }
 
+    void OnEnable()
+    {
+        playerInput.Enable();
+    }
 
-        characterController.Move(direction * speed  * Time.deltaTime);
+    void OnDisable()
+    {
+        playerInput.Disable();
     }
 }
+
