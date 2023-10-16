@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    CameraRotation camera;
     CharacterController characterController;
     Animator animator;
     PlayerInput playerInput;
@@ -12,9 +13,11 @@ public class PlayerController : MonoBehaviour
     Vector2 currentMovementInput;
     Vector3 currentMovement;
     Vector3 currentRunMovemnt;
-    float rotationFactorPerFrame = 2.0f;
-    float speed = 5.0f;
-    float speedRun = 2.0f;
+
+    
+    float rotationFactorPerFrame = 1.5f;
+    float speed = 3.0f;
+    float speedRun = 1.5f;
     bool isMovementPressed;
     bool isRunPressed;
 
@@ -88,6 +91,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        
         handleRotation();
         handleAnimation();
         if (isRunPressed)
