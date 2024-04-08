@@ -5,7 +5,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    CameraRotation camera;
+
+    public GameObject CamPos;
     CharacterController characterController;
     Animator animator;
     PlayerInput playerInput;
@@ -13,14 +14,14 @@ public class PlayerController : MonoBehaviour
     Vector2 currentMovementInput;
     Vector3 currentMovement;
     Vector3 currentRunMovemnt;
-
+    Vector3 currentCamPos;
     
-    float rotationFactorPerFrame = 1.5f;
+    float rotationFactorPerFrame = 3f;
     float speed = 3.0f;
     float speedRun = 1.5f;
     bool isMovementPressed;
     bool isRunPressed;
-
+    
     void Awake()
     {
         playerInput = new PlayerInput();
@@ -69,6 +70,16 @@ public class PlayerController : MonoBehaviour
     {
         bool isWalking = animator.GetBool("IsWalking");
         bool isRunning = animator.GetBool("IsRunning");
+        bool attack = animator.GetBool("Attack");
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            animator.SetBool("Attack", true);
+        }
+        else if (Input.GetKeyUp(KeyCode.E))
+        {
+            animator.SetBool("Attack", false);
+        }
+        
         if(isMovementPressed && !isWalking)
         {
             animator.SetBool("IsWalking", true);
@@ -78,11 +89,11 @@ public class PlayerController : MonoBehaviour
             animator.SetBool("IsWalking", false);
         }
 
-        if(isRunPressed && !isRunning)
+        if(isMovementPressed && !isRunning)
         {
             animator.SetBool("IsRunning", true);
         }
-        else if(!isRunPressed && isRunning)
+        else if(!isMovementPressed && isRunning)
         {
             animator.SetBool("IsRunning", false);
         }
